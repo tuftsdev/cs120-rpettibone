@@ -8,7 +8,14 @@
   <script>
     function loadMessages() {
       jsonData = '[{"id":1,"content":"Do you really want to hurt me?","username":"Boy"},{"id":2,"content":"Do you really want to make me cry?","username":"George"}]';
-      // Your code here......
+      theMessages = JSON.parse(jsonData);
+      theInnerHTML = '';
+      for(x in theMessages) {
+        theInnerHTML = theInnerHTML + '<p style="background-color:lightgreen; border-radius:6px; margin:6px;">' +
+                      '<span style="font-size:24px; padding-left:6px;">' + theMessages[x].content + '</span> ' + theMessages[x].username + '</p>';
+      }
+      document.getElementById('messages').innerHTML = theInnerHTML;
+      //NOTE: I did a bad thing by adding the styling directly to the elements, but we couldn't modify the HTML to add a stylesheet.
     }
   </script>
 </head>
