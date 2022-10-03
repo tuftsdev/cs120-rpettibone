@@ -14,7 +14,62 @@
 <div id="lyrics"></div>
 
 <script>
-	// Complete this section and create a CSS file named style.css
+	theLyrics = ["Lisa: Come gather round, children<br>It's high time ye learned",
+				"'Bout a hero named Homer\nAnd a devil named Burns.",
+				"We'll march 'till we drop\nThe girls and the fellas.",
+				"We'll fight 'till the death\nOr else fold like umbrellas.",
+				"So we'll march day and night\nBy the big cooling tower.",
+				"They have the plant\nBut we have the power.",
+				"Lenny: Now do \"Classical Gas!\"",
+				"All: So we'll march day and night\nBy the big cooling tower.",
+				"**Burns and Smithers**",
+				""];
+
+	document.getElementById("butwehavethepower").addEventListener('timeupdate', function() {
+		var seconds = parseInt(this.currentTime,10);
+		if (seconds==6) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[0];
+		}
+		if (seconds==11) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[1];
+		}
+		if (seconds==17) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[2];
+		}
+		if (seconds==22) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[3];
+		}
+		if (seconds==32) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[8];
+		}
+		if (seconds==38) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[4];
+		}
+		if (seconds==44) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[5];
+		}
+		if (seconds==53) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[6];
+		}
+		if (seconds==56) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[9];
+		}
+		if (seconds==73) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[7];
+		}
+		if (seconds==79) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[5];
+		}
+		if (seconds==82) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[4];
+		}
+		if (seconds==87) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[5];
+		}
+		if (seconds==91) { 
+			document.getElementById("lyrics").innerHTML = theLyrics[8];
+		}
+	});
 </script>
 </body>
 </html>
