@@ -1,7 +1,22 @@
 * {
-    background-color: aqua;
+    background-color: lightgray;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    text-align: center;
+    color: darkolivegreen;
 }
-#butwehavethepower {
+
+#title {
+    font-size: 60px;
+
+}
+
+video {
     border-style: dashed;
-    border-color: blue;
+    border-width: 5px;
+    padding: 10px;
+}
+
+p {
+    font-style: italic;
+    font-size: 20px;
 }
