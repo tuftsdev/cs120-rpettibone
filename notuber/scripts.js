@@ -2,8 +2,8 @@ const username = "yCA9BxBx";
 const rideAPIurl = "https://jordan-marsh.herokuapp.com/rides";
 const carImage = "./car.png";
 
-let map;
-let cars = [{id: "mXfkjrFw", coords: {lat: 42.3453, lng:-71.0464}}, 
+var map;
+var cars = [{id: "mXfkjrFw", coords: {lat: 42.3453, lng:-71.0464}}, 
             {id: "nZXB8ZHz", coords: {lat: 42.3662, lng:-71.0621}}, 
             {id: "Tkwu74WC", coords: {lat: 42.3603, lng:-71.0547}}, 
             {id: "5KWpnAJN", coords: {lat: 42.3472, lng:-71.0802}}, 
@@ -25,11 +25,10 @@ function generateMarker(value) {
 }
 
 function postMyLocation() {
-
     if (navigator.geolocation) { 
         navigator.geolocation.getCurrentPosition(function(position) {
             myLat = position.coords.latitude;
-            var myLng = position.coords.longitude;
+            myLng = position.coords.longitude;
             myLoc = new google.maps.LatLng(myLat, myLng);
             var me = new google.maps.Marker({
                 position: myLoc,
@@ -37,11 +36,41 @@ function postMyLocation() {
                 title: "Meeeeee",
             });
             me.setMap(map);
+            contactAPI();
         });
     }
     else {
-        alert("Geolocation is not supported by your web browser.  What a shame!");
+        alert("Geolocation is not supported.");
     }
+}
+
+function contactAPI() {
+    var theParameter = "username=" + username + "&lat=" + myLat + "&lng=" + myLng;
+    console.log(theParameter);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', rideAPIurl, true);
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            console.log(xhr.responseText);
+            useResponse(xhr.responseText);
+        }
+    }
+    xhr.send(theParameter);
+}
+
+function useResponse(str) {
+    var moreCars = JSON.parse(str);
+    moreCars.map(function(value){
+        var pos = new google.maps.LatLng(value.lat, value.lng);
+        return new google.maps.Marker({
+            position: pos,
+            map,
+            title: value.username,
+            icon: carImage,
+        });
+    });
+
 }
 
 function initMap() {
