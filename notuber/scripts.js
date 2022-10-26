@@ -13,6 +13,8 @@ var cars = [{id: "mXfkjrFw", coords: {lat: 42.3453, lng:-71.0464}},
 var myLat = 0;
 var myLng = 0;
 var myLoc;
+var moreCars;
+var me;
 
 
 function generateMarker(value) {
@@ -30,12 +32,13 @@ function postMyLocation() {
             myLat = position.coords.latitude;
             myLng = position.coords.longitude;
             myLoc = new google.maps.LatLng(myLat, myLng);
-            var me = new google.maps.Marker({
+            me = new google.maps.Marker({
                 position: myLoc,
                 map,
                 title: "Meeeeee",
             });
             me.setMap(map);
+            me.addListener('click', calculateDistances);
             contactAPI();
         });
     }
@@ -46,13 +49,11 @@ function postMyLocation() {
 
 function contactAPI() {
     var theParameter = "username=" + username + "&lat=" + myLat + "&lng=" + myLng;
-    console.log(theParameter);
     var xhr = new XMLHttpRequest();
     xhr.open('POST', rideAPIurl, true);
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
         if(xhr.readyState == 4 && xhr.status == 200) {
-            console.log(xhr.responseText);
             useResponse(xhr.responseText);
         }
     }
@@ -60,7 +61,7 @@ function contactAPI() {
 }
 
 function useResponse(str) {
-    var moreCars = JSON.parse(str);
+    moreCars = JSON.parse(str);
     moreCars.map(function(value){
         var pos = new google.maps.LatLng(value.lat, value.lng);
         return new google.maps.Marker({
@@ -73,6 +74,35 @@ function useResponse(str) {
 
 }
 
+function calculateDistances(){
+    var x = moreCars.map(function(value){
+        var carLoc = new google.maps.LatLng(value.lat, value.lng);
+        return google.maps.geometry.spherical.computeDistanceBetween(myLoc, carLoc)/1609;
+    });
+    var minDist = Math.min(...x);
+    var minIndex = x.indexOf(minDist);
+    var minUsername = moreCars[minIndex].username;
+    var minLatLng = new google.maps.LatLng(moreCars[minIndex].lat, moreCars[minIndex].lng);
+    var windowHTML = "<p>Closest Car: " + minUsername + "</p><p>Distance: " + minDist + " miles</p>";
+    var infowindow = new google.maps.InfoWindow({
+        content: windowHTML,
+        ariaLabel: "",
+    });
+    infowindow.open({
+        anchor: me,
+        map,
+    });
+    var minLineCoords = [myLoc, minLatLng];        
+    var minLine = new google.maps.Polyline({
+        path: minLineCoords,
+        geodesic: true,
+        strokeColor: "#FF0000",
+        strokeOpacity: 1.0,
+        strokeWeight: 2,
+    });
+    minLine.setMap(map);
+}
+
 function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 42.352271, lng: -71.05524200000001},
@@ -82,12 +112,6 @@ function initMap() {
     cars.map(generateMarker);
 
     postMyLocation();
-    //console.log(myLat);
-    /*new google.maps.Marker({
-        position: myLoc,
-        map,
-        title: "Meeeeee",
-    });*/
 }
  
 window.initMap = initMap;
