@@ -1,5 +1,5 @@
 const username = "yCA9BxBx";
-const rideAPIurl = "https://jordan-marsh.herokuapp.com/rides";
+const rideAPIurl = "https://rocky-beach-05736.herokuapp.com/rides";
 const carImage = "./car.png";
 
 var map;
