@@ -1,30 +1,27 @@
 const username = "yCA9BxBx";
-const rideAPIurl = "https://rocky-beach-05736.herokuapp.com/rides";
+const rideAPIurl = "https://sleepy-harbor-65621.herokuapp.com/rides";
+const riderAPIurl = "https://sleepy-harbor-65621.herokuapp.com/riders";
 const carImage = "./car.png";
+const alienImage = "./alien.png";
 
 var map;
-var cars = [{id: "mXfkjrFw", coords: {lat: 42.3453, lng:-71.0464}}, 
-            {id: "nZXB8ZHz", coords: {lat: 42.3662, lng:-71.0621}}, 
-            {id: "Tkwu74WC", coords: {lat: 42.3603, lng:-71.0547}}, 
-            {id: "5KWpnAJN", coords: {lat: 42.3472, lng:-71.0802}}, 
-            {id: "uf5ZrXYw", coords: {lat: 42.3663, lng:-71.0544}}, 
-            {id: "VMerzMH8", coords: {lat: 42.3542, lng:-71.0704}}];
 
 var myLat = 0;
 var myLng = 0;
 var myLoc;
 var moreCars;
+var moreRiders;
 var me;
 
 
-function generateMarker(value) {
+/*function generateMarker(value) {
     return new google.maps.Marker({
         position: value.coords,
         map,
         title: value.id,
         icon: carImage,
     });
-}
+}*/
 
 function postMyLocation() {
     if (navigator.geolocation) { 
@@ -38,8 +35,8 @@ function postMyLocation() {
                 title: "Meeeeee",
             });
             me.setMap(map);
-            me.addListener('click', calculateDistances);
-            contactAPI();
+            map.panTo(me.getPosition());
+            me.addListener('click', function(){calculateDistances(me);});
         });
     }
     else {
@@ -47,37 +44,58 @@ function postMyLocation() {
     }
 }
 
-function contactAPI() {
+function contactAPI(i) {
     var theParameter = "username=" + username + "&lat=" + myLat + "&lng=" + myLng;
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', rideAPIurl, true);
+    if (i==1){
+        xhr.open('POST', rideAPIurl, true);
+    }else{
+        xhr.open('POST', riderAPIurl, true);
+    }
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
         if(xhr.readyState == 4 && xhr.status == 200) {
-            useResponse(xhr.responseText);
+            if(i==1){
+                useResponse1(xhr.responseText);
+            }else{
+                useResponse2(xhr.responseText);
+            }
         }
     }
     xhr.send(theParameter);
 }
 
-function useResponse(str) {
+function useResponse1(str) {
     moreCars = JSON.parse(str);
     moreCars.map(function(value){
         var pos = new google.maps.LatLng(value.lat, value.lng);
-        return new google.maps.Marker({
+        new google.maps.Marker({
             position: pos,
             map,
             title: value.username,
             icon: carImage,
         });
     });
-
 }
 
-function calculateDistances(){
+function useResponse2(str) {
+    moreRiders = JSON.parse(str);
+    moreRiders.map(function(value){
+        var pos = new google.maps.LatLng(value.lat, value.lng);
+        var x = new google.maps.Marker({
+            position: pos,
+            map,
+            title: value.username,
+            icon: alienImage,
+        });
+        x.addListener('click', function(){calculateDistances(x);});
+    });
+}
+
+function calculateDistances(y){
     var x = moreCars.map(function(value){
         var carLoc = new google.maps.LatLng(value.lat, value.lng);
-        return google.maps.geometry.spherical.computeDistanceBetween(myLoc, carLoc)/1609;
+        return google.maps.geometry.spherical.computeDistanceBetween(y.getPosition(), carLoc)/1609;
     });
     var minDist = Math.min(...x);
     var minIndex = x.indexOf(minDist);
@@ -89,10 +107,10 @@ function calculateDistances(){
         ariaLabel: "",
     });
     infowindow.open({
-        anchor: me,
+        anchor: y,
         map,
     });
-    var minLineCoords = [myLoc, minLatLng];        
+    var minLineCoords = [y.getPosition(), minLatLng];        
     var minLine = new google.maps.Polyline({
         path: minLineCoords,
         geodesic: true,
@@ -105,13 +123,15 @@ function calculateDistances(){
 
 function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 42.352271, lng: -71.05524200000001},
-        zoom: 14,
+        center: { lat: myLat, lng: myLat},
+        zoom: 2,
         });
 
-    cars.map(generateMarker);
+    //cars.map(generateMarker);
 
     postMyLocation();
+    contactAPI(1);
+    contactAPI(2);
 }
  
 window.initMap = initMap;
