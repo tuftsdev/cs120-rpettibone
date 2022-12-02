@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<head>
+    <title>Lab 13</title>
+    <meta charset="utf-8">
+</head>
+<body>
+<h1>Lab 13</h1>
+
+<h2>Introduction</h2>
+<p>
+    "Not Uber" is a ride hailing app designed by Tufts University computer science professor Ming Chow. Pettibone and 
+    Associates Total Security™ was "hired" to study the app, find any potential security vulnerabilities, and report
+    them back to Mr. Chow.
+</p>
+
+<h2>Methodology</h2>
+<p>
+    In order to test this app, it was important to have a working version of it. The files <code>server-vuln.js</code> and <code>package.json</code> 
+    were put into a folder and <code>npm install</code> was run in the terminal in order to install all dependencies. After that, a 
+    PostgreSQL database was created locally with the same design as was implied by <code>server-vuln.js</code>. Dummy entries were 
+    inserted into this database. Then, the app was run with the terminal command <code>node server-vuln.js</code>.
+</p>
+<p>
+    After all this was set up, the code in <code>server-vuln.js</code> was visually scanned line by line. When a potential vulnerability
+    was found, it was verified either by visiting <code>http://localhost:3000/...</code> or using the command line tool <code>curl</code> to
+    send the app data via POST requests. 
+</p>
+
+<h2>Abstract of Findings</h2>
+<p>
+    The primary finding of this investigation is that the app's database is extremely vulnerable via SQL injection. It is 
+    possible to dump database contents and even delete database tables entirely. Another finding is the fact that user 
+    location data (latitude and longitude) are visible to third parties. A third finding is that the app readily shares 
+    data across web domains, potentially allowing malicious actors access confidential information. Lastly, the server 
+    is potentially vulnerable to Denial of Service (DoS) attacks.
+</p>
+<p>
+    Each of these issues hits a corner of the venerable CIA Triad: Confidentiality, Integrity, and Accessibility, and 
+    should be remedied as soon as possible.
+</p>
+
+<h2>Issues Found</h2>
+<ol>
+<li>
+    <ul>
+        <li><strong>Issue:</strong> SQL Injection</li>
+        <li><strong>Location:</strong> In the code for <code>app.get("/vehicle.json",...)</code></li>
+        <li><strong>Severity:</strong> High</li>
+        <li><strong>Description of Issue:</strong> SQL injection is possible through the query string in the HTTP 
+            GET request to <code>"/vehicle.json"</code>. For example, navigation to <code>http://localhost:3000/vehicle.json?username=blah' OR '1'='1"</code>
+            will dump the vehicles table. 
+            Navigation to <code>http://localhost:3000/vehicle.json?username=blah'; DROP TABLE passengers; SELECT username FROM vehicles WHERE username = 'blah</code>
+            will delete the passengers table, wreaking havoc. The image below is the relevant section of the code.<br>
+            <img src="./1-1.png">
+        </li>
+        <li><strong>Proof of Vulnerability:</strong> Shown below is the database dump version of the vulnerability.<br>
+            <img src="./1-2.png">
+        </li>
+        <li><strong>Resolution:</strong> Do not trust user input. Use prepared statements and validate user input to ensure it has 
+        the desired format.
+        </li>
+    </ul>
+</li>
+<br><br>
+<li>
+    <ul>
+        <li><strong>Issue:</strong> SQL Injection</li>
+        <li><strong>Location:</strong> In the code for <code>app.get("/passengers.json",...)</code></li>
+        <li><strong>Severity:</strong> High</li>
+        <li><strong>Description of Issue:</strong> Same as in item 1.</li>
+        <li><strong>Proof of Vulnerability:</strong> Same as in item 1.</li>
+        <li><strong>Resolution:</strong> Same as in item 1.</li>
+    </ul>
+</li>
+<br><br>
+<li>
+    <ul>
+        <li><strong>Issue:</strong> Potential User Privacy Violation</li>
+        <li><strong>Location:</strong> In the code for <code>app.get("/",...)</code></li>
+        <li><strong>Severity:</strong> Medium</li>
+        <li><strong>Description of Issue:</strong> HTTP GET request to <code>"/"</code> displays a list of passengers and where they requested a ride from. 
+            This is problematic because it allows anyone to view the location of riders. User location should be confidential except for those 
+            who need it, such as drivers. The image below is the relevant section of the code.<br>
+            <img src="./2-1.png">
+        </li>
+        <li><strong>Proof of Vulnerability:</strong> Shown below is the home page of the app.<br>
+            <img src="./2-2.png">
+        </li>
+        <li><strong>Resolution:</strong> Do not display passenger location on the home page of the app. Alternatively, allow users to log in to 
+            the app, and only serve the user locations that they <em>should</em> have access to.</li>
+    </ul>
+</li>
+<br><br>
+<li>
+    <ul>
+        <li><strong>Issue:</strong> Cross Origin Resource Sharing</li>
+        <li><strong>Location:</strong> In the code for <code>app.post("/rides",...)</code> and <code>app.post("/update",...)</code></li>
+        <li><strong>Severity:</strong> Medium</li>
+        <li><strong>Description of Issue:</strong> The response to HTTP POST requests to the above URIs have CORS enabled, as indicated by the inclusion of 
+            <code>response.header("Access-Control-Allow-Origin", "*")</code> in the server code. This will allow any client to access the response, potentially 
+            revealing confidential information.</li>
+        <li><strong>Proof of Vulnerability:</strong> See the images below as proof that the code allows any client to POST and receive a reponse.
+            We know this must be the case because of the headers added to the response.<br>
+            <img src="./3-1.png"><br>
+            <img src="./3-2.png">
+        </li>
+        <li><strong>Resolution:</strong> Consider white-listing certain specific domains to receive the relevant information from the database 
+            instead of allowing anyone to access it by using the wildcard *.</li>
+    </ul>
+</li>
+<br><br>
+<li>
+    <ul>
+        <li><strong>Issue:</strong> Potentiality for DoS Attack on App Server</li>
+        <li><strong>Location:</strong> In the code for <code>app.post("/rides",...)</code> and <code>app.post("/update",...)</code></li>
+        <li><strong>Severity:</strong> Medium</li>
+        <li><strong>Description of Issue:</strong> By making repeated POST requests to the above URIs, an attacker could tie up the server, 
+            reducing the availablity of the service.</li>
+        <li><strong>Proof of Vulnerability:</strong> None.</li>
+        <li><strong>Resolution:</strong> Closely monitor network traffic to catch DoS attacks early.</li>
+    </ul>
+</li>
+</ol>
+
+<h2>Conclusion</h2>
+<p>Mr. Chow, your app is vulnerable. The database is vulnerable to being read and altered by attackers. Rider location is not private. 
+    Anyone can receive a response after a POST request. Lastly, there is the potentiality for a DoS attack. Please take the steps mentioned 
+    above to prevent an incident from occurring.
+</p>
+
+</body>
+</html>
